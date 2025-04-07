@@ -2,6 +2,16 @@ const canvas = document.getElementById('canvas');
 const c = canvas.getContext('2d');
 const fps = 60;
 
+//Setup canvas
+canvas.width = window.innerWidth * 0.95;
+canvas.height = window.innerHeight * 0.95;
+canvas.style.position = 'absolute';
+canvas.style.left = '50px';
+canvas.style.top = '10px';
+
+//Control window color
+document.body.style.backgroundColor = 'black';
+
 //Setup background
 let backgnd_img = new Image();
 backgnd_img.src = "backgroundSprite.png";
@@ -13,6 +23,7 @@ let themeMusic = [
   'pixelDubstep.mp3'
 ];
 
+//Setup game
 let sfx = {
   shoot: 'plasmaShot.mp3',
 
