@@ -2,17 +2,26 @@ const canvas = document.getElementById('canvas');
 const c = canvas.getContext('2d');
 const fps = 60;
 
+//Setup background
 let backgnd_img = new Image();
 backgnd_img.src = "backgroundSprite.png";
 
+//Setup theme music
 let themeMusic = [
   'MetalDub.mp3',
   'dubLogo.mp3',
   'pixelDubstep.mp3'
 ];
 
+let sfx = {
+  shoot: 'plasmaShot.mp3',
+
+}
+
+//Setup keys
 let keys = {};
 
+//Define classes
 class Player {
   constructor() {
     this.pos = {
@@ -33,10 +42,11 @@ class Player {
     this.offsetY = this.height / 2;
   }
 
+  //Move player
   move() {
     if (keys.w) {
       this.vel.y = -5;
-      this.rotate = -90;
+      this.rotate = -45;
     }
 
     if (keys.a) {
@@ -46,7 +56,7 @@ class Player {
 
     if (keys.s) {
       this.vel.y = 5;
-      this.rotate = 90;
+      this.rotate = 45;
     }
 
     if (keys.d) {
@@ -68,6 +78,7 @@ class Player {
     };
   }
 
+  //Render player
   update() {
     this.pos.x += this.vel.x;
     this.pos.y += this.vel.y;
@@ -83,6 +94,7 @@ class Player {
   }
 }
 
+//Setup projectiles
 class Cheeseburger {
   constructor(x, y, velX) {
     this.pos = {
@@ -103,16 +115,19 @@ class Cheeseburger {
     this.image.src = "cheeseburgerSpriteSUPER.png";
   }
 
+  //Rotate burger
   rotateCheeseburger() {
     this.angle += 0.1;
   }
 
+  //Check burger collisions
   collision() {
     if (this.pos.x > canvas.width + 50) {
       this.outside = true;
     }
   }
 
+  //Render burger
   update() {
     this.pos.x += this.vel.x;
     this.pos.y += this.vel.y;
@@ -130,17 +145,21 @@ class Cheeseburger {
   }
 }
 
+//Setup enemies
 class Enemys {
 
 }
 
+//Defining player
 let player = new Player();
 
+//Control keystrokes
 function keyHandler(event) {
   if (event.type == 'keydown') keys[event.key] = true;
   if (event.type == 'keyup') keys[event.key] = false;
 }
 
+//Create cheeseburgers
 let cheeseburgers = [];
 let delay = 0;
 function shootCheeseburger() {
@@ -149,6 +168,7 @@ function shootCheeseburger() {
     let offsetY = 0;
     let newVelY = 0;
 
+    //Control cheeseburger direction
     if (player.turn == -1) {
       newVelY = -5;
       offsetX = ((player.pos.x - player.width) - 10);
@@ -162,9 +182,15 @@ function shootCheeseburger() {
     let cheeseburger = new Cheeseburger(offsetX, offsetY, newVelY);
     cheeseburgers.push(cheeseburger);
     delay = 10;
+
+    let audio = new Audio(sfx.shoot);
+    audio.play();
+    audio.controls = true;
+    audio.volume = 0.2;
   }
 }
 
+//Choose background theme song
 let song = '';
 let audio = 0;
 function chooseSong() {
@@ -173,6 +199,7 @@ function chooseSong() {
   song.volume = 0.1;
 }
 
+//Run the game
 function run() {
   shootCheeseburger();
   if (delay >= 0) delay--;
@@ -190,12 +217,15 @@ function run() {
   }
 }
 
+//Render the game
 function render() {
   c.clearRect(0, 0, canvas.width, canvas.height);
   c.drawImage(backgnd_img, 0, 0, canvas.width, canvas.height);
 
+  //Render players
   player.update();
 
+  //Render each burger
   cheeseburgers.forEach((cheeseburger, i) => {
     cheeseburger.update();
 
@@ -206,12 +236,15 @@ function render() {
   })
 }
 
+//Loop game
 setInterval(() => {
   run();
   render();
 }, 1000/fps)
 
+//Choose the first song for loop
 chooseSong();
 
+//Setup event listeners
 document.addEventListener('keydown', keyHandler);
 document.addEventListener('keyup', keyHandler);
