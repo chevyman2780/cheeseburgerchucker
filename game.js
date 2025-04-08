@@ -48,10 +48,10 @@ let ranged = {
 
 //Setup enemy sprites
 let enemySprites = [
-  './Pictures/enemySprite.png',
-  './Pictures/enemylvl2Sprite.png',
-  './Pictures/TankSprite.png',
-  './Pictures/rangedSprite.png'
+  enemySprite,
+  enemylvl2,
+  tank,
+  ranged
 ]
 
 //Setup theme music
@@ -155,17 +155,22 @@ class Player {
     if (this.pos.x >= canvas.width) {
       this.pos.x = 0 - this.width;
       chooseBackground();
+      createEnemies();
     } else if (this.pos.x <= 0 - this.width) {
       this.pos.x = canvas.width;
       chooseBackground();
+      createEnemies();
     }
 
     if (this.pos.y >= canvas.height) {
       this.pos.y = 0;
       chooseBackground();
+      createEnemies();
     } else if (this.pos.y <= 0 - this.height) {
       this.pos.y = canvas.height;
       chooseBackground();
+      if (enemies.length == 0);
+      createEnemies();
     }
   }
   //Render player
@@ -193,16 +198,18 @@ class Player {
 //Setup projectiles
 class Cheeseburger {
   constructor(x, y, velX, velY) {
-    this.pos = {
-      x: x,
-      y: y
-    }
+    this.x = x;
+    this.y = y;
     this.vel = {
       x: velX, 
       y: velY
     }
-    this.width = (51);
-    this.height= (44);
+    this.width = 51;
+    this.height= 44;
+    this.hitBox = {
+      width: 50,
+      height: 41
+    }
     this.angle = 0;
     this.offsetX = (this.width / 2);
     this.offsetY = (this.height / 2);
@@ -218,36 +225,42 @@ class Cheeseburger {
 
   //Check burger collisions
   collision() {
-    if (this.pos.x > canvas.width + 50) {
+    if (this.x > canvas.width + 50) {
       this.outside = true;
     }
   }
 
   //Render burger
   update() {
-    this.pos.x += this.vel.x;
-    this.pos.y += this.vel.y;
+    this.x += this.vel.x;
+    this.y += this.vel.y;
     
     this.rotateCheeseburger();
     this.collision();
 
     c.fillStyle = 'orange';
     c.save();
-    c.translate((this.pos.x + this.offsetX), (this.pos.y + this.offsetY));
+    c.translate((this.x + this.offsetX), (this.y + this.offsetY));
     c.rotate(this.angle);
-    c.translate(-(this.pos.x + this.offsetX), -(this.pos.y + this.offsetY));
-    c.drawImage(this.image, this.pos.x, this.pos.y, this.width, this.height);
+    c.translate(-(this.x + this.offsetX), -(this.y + this.offsetY));
+    c.drawImage(this.image, this.x, this.y, this.width, this.height);
     c.restore();
   }
 }
 
 //Setup enemies
 class Enemy {
-  constructor(x, y) {
+  constructor(x, y, velX, velY) {
     this.x = x;
     this.y = y;
+    this.velX = velX;
+    this.velY = velY;
     this.width = 400;
     this.height = 245;
+    this.hitBox = {
+      width: 60,
+      height: (2*137)
+    }
     this.skin = '';
     this.choseSkin = false;
   }
@@ -258,10 +271,12 @@ class Enemy {
     let chosen = enemySprites[index];
 
     this.skin = new Image();
-    this.skin.src = chosen;
+    this.skin.src = chosen.src;
   }
 
   update() {
+    this.x += this.velX;
+    this.y += this.velY;
     c.drawImage(this.skin, this.x, this.y, this.width, this.height);
   }
 }
@@ -313,12 +328,48 @@ function shootCheeseburger() {
 let enemyCount = 5;
 let enemies = [];
 function createEnemies() {
-  for (let i=0; i<=5; i++) {
-    let enemyX = Math.random() * canvas.width;
-    let enemyY = Math.random() * canvas.height;
+  for (let i=0; i<enemyCount; i++) {
+    let enemyX = Math.floor(Math.random() * (canvas.width - 400));
+    let enemyY = Math.floor(Math.random() * (canvas.height - 245));
 
-    enemies.push(new Enemy(enemyX, enemyY));
+    enemies.push(new Enemy(enemyX, enemyY, 0, 0));
   }
+}
+
+//Create pathfinding for enemies
+function pathfinding() {
+  enemies.forEach(enemy => {
+    let diffX = (player.pos.x - enemy.x);
+    let diffY = (player.pos.y - enemy.y);
+
+    let angle = Math.atan2(diffY, diffX);
+
+    let newVelX = Math.cos(angle) * 1.7;
+    let newVelY = Math.sin(angle) * 1.7;
+
+    enemy.velX = newVelX;
+    enemy.velY = newVelY;
+  })
+}
+
+function collision() {
+  enemies.forEach((enemy, e) => {
+    cheeseburgers.forEach((burger, b) => {
+      if (burger.x + burger.hitBox.width > enemy.x &&
+          burger.x < enemy.x + enemy.hitBox.width &&
+          burger.y + burger.hitBox.height > enemy.y &&
+          burger.y < enemy.y + enemy.hitBox.height) {
+
+          enemies.splice(e, 1);
+          e--;
+
+          cheeseburgers.splice(b, 1);
+          b--;    
+      }
+    })
+    
+    console.log(enemy);
+  })
 }
 
 //Choose background theme song
@@ -346,6 +397,7 @@ function chooseBackground() {
 //Run the game
 function run() {
   shootCheeseburger();
+  pathfinding();
   if (delay >= 0) delay--;
   
   if (song.ended) {
@@ -359,6 +411,8 @@ function run() {
   if (!song == '') {
     song.play();
   }
+
+  collision();
 }
 
 //Render the game
@@ -410,10 +464,9 @@ setInterval(() => {
 
 //Choose the first song for loop
 chooseSong();
+
 //Choose the first background for loop
 chooseBackground();
-//Choose the first set of enemies for loop
-createEnemies();
 
 //Setup event listeners
 document.addEventListener('keydown', keyHandler);
