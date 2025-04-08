@@ -12,21 +12,59 @@ canvas.style.top = '10px';
 //Control window color
 document.body.style.backgroundColor = 'black';
 
-//Setup background
-let backgnd_img = new Image();
-backgnd_img.src = "backgroundSprite.png";
+//Setup dungeon backgrounds
+let dungeons_imgs = [
+  './Pictures/dungeon1.png',
+  './Pictures/dungeon2.png',
+  './Pictures/dungeon3.png',
+  './Pictures/backgroundSprite.png'
+]
+
+let bckndImg = '';
+
+let enemySprite = {
+  velX: 0,
+  velY: 0,
+  src: './Pictures/enemySprite.png'
+}
+
+let enemylvl2 = {
+  velX: 0,
+  velY: 0,
+  src: './Pictures/enemylvl2Sprite.png'
+}
+
+let tank = {
+  velX: 0,
+  velY: 0,
+  src: './Pictures/TankSprite.png'
+}
+
+let ranged = {
+  velX: 0,
+  velY: 0,
+  src:  './Pictures/rangedSprite.png'
+}
+
+//Setup enemy sprites
+let enemySprites = [
+  './Pictures/enemySprite.png',
+  './Pictures/enemylvl2Sprite.png',
+  './Pictures/TankSprite.png',
+  './Pictures/rangedSprite.png'
+]
 
 //Setup theme music
 let themeMusic = [
-  'MetalDub.mp3',
-  'dubLogo.mp3',
-  'pixelDubstep.mp3'
-];
+  './Sounds/MetalDub.mp3',
+  './Sounds/dubLogo.mp3',
+  './Sounds/pixelDubstep.mp3'
+]
 
 //Setup game
 let sfx = {
-  shoot: 'plasmaShot.mp3',
-
+  shoot: './Sounds/plasmaShot.mp3',
+  walking: './Sounds/walking.mp3'
 }
 
 //Setup keys
@@ -46,33 +84,57 @@ class Player {
     this.width = (35*2);
     this.height = (100*2);
     this.img = new Image();
-    this.img.src = "newJaspser.png";
+    this.img.src = "./Pictures/newJaspser.png";
     this.turn = 1;
     this.rotate = 0;
     this.offsetX = this.width / 2;
     this.offsetY = this.height / 2;
+    this.walking = false;
+    this.walkingSFX = new Audio(sfx.walking);
   }
 
   //Move player
   move() {
     if (keys.w) {
       this.vel.y = -5;
-      this.rotate = -45;
+      if (this.turn == 1) {
+        this.rotate = -45;
+      } else {
+        this.rotate = 45;
+      }
+      
+      if (this.walking == false) {
+        this.walking = true;
+      }
     }
 
     if (keys.a) {
       this.vel.x = -5;
       this.turn = -1;
+      if (this.walking == false) {
+        this.walking = true;
+      }
     }
 
     if (keys.s) {
       this.vel.y = 5;
-      this.rotate = 45;
+      if (this.turn == -1) {
+        this.rotate = -45;
+      } else {
+        this.rotate = 45;
+      }
+
+      if (this.walking == false) {
+        this.walking = true;
+      }
     }
 
     if (keys.d) {
       this.vel.x = 5;
       this.turn = 1;
+      if (this.walking == false) {
+        this.walking = true;
+      }
     }
 
     if (!keys.d && !keys.a) {
@@ -83,12 +145,29 @@ class Player {
       this.vel.y = 0;
       this.rotate = 0;
     }
+    
+    if (!keys['d'] && !keys['a']) {
+      if (!keys['w'] && !keys['s']) {
+        this.walking = false;
+      }
+    }
 
-    if (this.pos.x >= (canvas.width/2) - this.width) {
-      this.pos.x = (canvas.width/2) - this.width;
-    };
+    if (this.pos.x >= canvas.width) {
+      this.pos.x = 0 - this.width;
+      chooseBackground();
+    } else if (this.pos.x <= 0 - this.width) {
+      this.pos.x = canvas.width;
+      chooseBackground();
+    }
+
+    if (this.pos.y >= canvas.height) {
+      this.pos.y = 0;
+      chooseBackground();
+    } else if (this.pos.y <= 0 - this.height) {
+      this.pos.y = canvas.height;
+      chooseBackground();
+    }
   }
-
   //Render player
   update() {
     this.pos.x += this.vel.x;
@@ -102,19 +181,25 @@ class Player {
     c.scale(this.turn, 1);
     c.drawImage(this.img, this.pos.x*this.turn, this.pos.y, this.width*this.turn, this.height);
     c.restore();
+
+    if (this.walking) {
+      this.walkingSFX.play();
+    } else {
+      this.walkingSFX.pause();
+    }
   }
 }
 
 //Setup projectiles
 class Cheeseburger {
-  constructor(x, y, velX) {
+  constructor(x, y, velX, velY) {
     this.pos = {
       x: x,
       y: y
     }
     this.vel = {
       x: velX, 
-      y: 0
+      y: velY
     }
     this.width = (51);
     this.height= (44);
@@ -123,7 +208,7 @@ class Cheeseburger {
     this.offsetY = (this.height / 2);
     this.outside = false;
     this.image = new Image();
-    this.image.src = "cheeseburgerSpriteSUPER.png";
+    this.image.src = "./Pictures/cheeseburgerSpriteSUPER.png";
   }
 
   //Rotate burger
@@ -157,8 +242,28 @@ class Cheeseburger {
 }
 
 //Setup enemies
-class Enemys {
+class Enemy {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.width = 400;
+    this.height = 245;
+    this.skin = '';
+    this.choseSkin = false;
+  }
 
+  chooseSkin() {
+    let index = Math.floor(Math.random() * enemySprites.length);
+
+    let chosen = enemySprites[index];
+
+    this.skin = new Image();
+    this.skin.src = chosen;
+  }
+
+  update() {
+    c.drawImage(this.skin, this.x, this.y, this.width, this.height);
+  }
 }
 
 //Defining player
@@ -177,20 +282,23 @@ function shootCheeseburger() {
   if (delay <= 0 && keys[' ']) {
     let offsetX = 0;
     let offsetY = 0;
+    let newVelX = 0;
     let newVelY = 0;
 
     //Control cheeseburger direction
     if (player.turn == -1) {
-      newVelY = -5;
+      newVelY = -(Math.sin(player.rotate) * 5);
+      newVelX = -6;
       offsetX = ((player.pos.x - player.width) - 10);
       offsetY = ((player.pos.y + player.height / 2) - 10);
     } else {
-      newVelY = 5;
+      newVelY = Math.sin(player.rotate) * 5;
+      newVelX = 6;
       offsetX = ((player.pos.x + player.width) - 10);
       offsetY = ((player.pos.y + player.height / 2) - 10);
     }
 
-    let cheeseburger = new Cheeseburger(offsetX, offsetY, newVelY);
+    let cheeseburger = new Cheeseburger(offsetX, offsetY, newVelX, newVelY);
     cheeseburgers.push(cheeseburger);
     delay = 10;
 
@@ -201,6 +309,18 @@ function shootCheeseburger() {
   }
 }
 
+//Create amount of enemies per dungeon
+let enemyCount = 5;
+let enemies = [];
+function createEnemies() {
+  for (let i=0; i<=5; i++) {
+    let enemyX = Math.random() * canvas.width;
+    let enemyY = Math.random() * canvas.height;
+
+    enemies.push(new Enemy(enemyX, enemyY));
+  }
+}
+
 //Choose background theme song
 let song = '';
 let audio = 0;
@@ -208,6 +328,19 @@ function chooseSong() {
   song = new Audio(themeMusic[audio]);
   song.controls = true;
   song.volume = 0.1;
+}
+
+//Choose dungeon background
+let background = '';
+let lastChosen = '';
+function chooseBackground() {
+  let availableBackgrounds = dungeons_imgs.filter(img => img !== lastChosen);
+  let index = Math.floor(Math.random() * availableBackgrounds.length);
+  let chosen = availableBackgrounds[index];
+
+  lastChosen = chosen;
+  background = new Image();
+  background.src = chosen;
 }
 
 //Run the game
@@ -231,8 +364,10 @@ function run() {
 //Render the game
 function render() {
   c.clearRect(0, 0, canvas.width, canvas.height);
-  c.drawImage(backgnd_img, 0, 0, canvas.width, canvas.height);
-
+  if (background != '') {
+    c.drawImage(background, 0, 0, canvas.width, canvas.height);
+  }
+  
   //Render players
   player.update();
 
@@ -245,6 +380,26 @@ function render() {
       i--;
     }
   })
+
+  if (dungeons_imgs.length == 0) {
+    dungeons_imgs = [
+      './Pictures/dungeon1.png',
+      './Pictures/dungeon2.png',
+      './Pictures/dungeon3.png',
+      './Pictures/backgroundSprite.png'
+    ]
+  }
+
+  enemies.forEach((enemy, i) => {
+    if (enemy.choseSkin == false) {
+      enemy.chooseSkin();
+      enemy.choseSkin = true;
+    }
+    
+    if (enemy.choseSkin == true) {
+      enemy.update();
+    }
+  })
 }
 
 //Loop game
@@ -255,6 +410,10 @@ setInterval(() => {
 
 //Choose the first song for loop
 chooseSong();
+//Choose the first background for loop
+chooseBackground();
+//Choose the first set of enemies for loop
+createEnemies();
 
 //Setup event listeners
 document.addEventListener('keydown', keyHandler);
