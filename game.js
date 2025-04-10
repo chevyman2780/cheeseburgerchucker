@@ -54,6 +54,16 @@ let enemySprites = [
   ranged
 ]
 
+//Setup Enemy array
+let enemies = [];
+
+//Setup cheeseburger array
+let cheeseburgers = [];
+
+//Control players position in game ex: intro, ending, middle
+let intro = true;
+let title = '';
+
 //Setup theme music
 let themeMusic = [
   './Sounds/MetalDub.mp3',
@@ -153,23 +163,30 @@ class Player {
     }
 
     if (this.pos.x >= canvas.width) {
-      this.pos.x = 0 - this.width;
+      this.pos.x = 0;;
       chooseBackground();
+      enemies = [];
+      cheeseburgers = [];
       createEnemies();
     } else if (this.pos.x <= 0 - this.width) {
       this.pos.x = canvas.width;
       chooseBackground();
+      enemies = [];
+      cheeseburgers = [];
       createEnemies();
     }
 
     if (this.pos.y >= canvas.height) {
       this.pos.y = 0;
       chooseBackground();
+      enemies = [];
+      cheeseburgers = [];
       createEnemies();
     } else if (this.pos.y <= 0 - this.height) {
       this.pos.y = canvas.height;
       chooseBackground();
-      if (enemies.length == 0);
+      enemies = [];
+      cheeseburgers = [];
       createEnemies();
     }
   }
@@ -226,6 +243,14 @@ class Cheeseburger {
   //Check burger collisions
   collision() {
     if (this.x > canvas.width + 50) {
+      this.outside = true;
+    } else if (this.x < 0 - 50) {
+      this.outside = true;
+    }
+
+    if (this.y > canvas.height + 50) {
+      this.outside = true;
+    } else if (this.y < 0 - 50) {
       this.outside = true;
     }
   }
@@ -288,10 +313,14 @@ let player = new Player();
 function keyHandler(event) {
   if (event.type == 'keydown') keys[event.key] = true;
   if (event.type == 'keyup') keys[event.key] = false;
+
+  if (keys['b'] && intro == true) {
+    document.body.removeChild(title);
+    intro = false;
+  }
 }
 
 //Create cheeseburgers
-let cheeseburgers = [];
 let delay = 0;
 function shootCheeseburger() {
   if (delay <= 0 && keys[' ']) {
@@ -313,20 +342,21 @@ function shootCheeseburger() {
       offsetY = ((player.pos.y + player.height / 2) - 10);
     }
 
-    let cheeseburger = new Cheeseburger(offsetX, offsetY, newVelX, newVelY);
-    cheeseburgers.push(cheeseburger);
-    delay = 10;
+    if (cheeseburgers.length < 10) {
+      let cheeseburger = new Cheeseburger(offsetX, offsetY, newVelX, newVelY);
+      cheeseburgers.push(cheeseburger);
+      delay = 10;
 
-    let audio = new Audio(sfx.shoot);
-    audio.play();
-    audio.controls = true;
-    audio.volume = 0.2;
+      let audio = new Audio(sfx.shoot);
+      audio.play();
+      audio.controls = true;
+      audio.volume = 0.2;
+    }
   }
 }
 
 //Create amount of enemies per dungeon
 let enemyCount = 5;
-let enemies = [];
 function createEnemies() {
   for (let i=0; i<enemyCount; i++) {
     let enemyX = Math.floor(Math.random() * (canvas.width - 400));
@@ -394,6 +424,25 @@ function chooseBackground() {
   background.src = chosen;
 }
 
+function introduction() {
+  c.clearRect(0, 0, canvas.width, canvas.height);
+  c.fillStyle = 'black';
+  c.fillRect(0, 0, canvas.width, canvas.height)
+
+  if (title === '') {
+    title = document.createElement('div');
+    title.textContent = 'Use WASD to move. SPACE to shoot. B to begin game.';
+    title.style.position = 'absolute';
+    title.style.left = canvas.offsetLeft + (canvas.width / 2) + 'px';
+    title.style.top = canvas.offsetTop + (canvas.height / 2) + 'px';
+    title.style.transform = 'translate(-50%, -50%)';
+    title.style.color = '#FFFFFF';
+    title.style.fontSize = (canvas.width / 50) + 'px';
+    title.style.fontFamily = 'Geo', 'sans-serif';
+    document.body.appendChild(title);
+  }
+}
+
 //Run the game
 function run() {
   shootCheeseburger();
@@ -458,8 +507,12 @@ function render() {
 
 //Loop game
 setInterval(() => {
-  run();
-  render();
+  if (!intro) {
+    run();
+    render();
+  } else {
+    introduction();
+  }
 }, 1000/fps)
 
 //Choose the first song for loop
