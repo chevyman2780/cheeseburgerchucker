@@ -17,19 +17,19 @@ class Background {
     this.song = new Audio();
     this.song.src = '';
     this.music = [
-      './Sounds/MetalDub.mp3',
-      './Sounds/dubLogo.mp3',
-      './Sounds/pixelDubstep.mp3',
-      './Sounds/BFGD.mp4',
-      './Sounds/Solaris Phase 2.mp4',
-      './Sounds/Doom Hunted.mp4',
-      './Sounds/Cultist Base.mp4'
+      './BackGround Music/MetalDub.mp3',
+      './BackGround Music/dubLogo.mp3',
+      './BackGround Music/pixelDubstep.mp3',
+      './BackGround Music/BFGD.mp3',
+      './BackGround Music/Solaris Phase 2.mp3',
+      './BackGround Music/Doom Hunted.mp3',
+      './BackGround Music/Cultist Base.mp3'
     ]
     this.bossMusic = [
-      './Sounds/No cure.mp4',
-      './Sounds/Milky Ways.mp4',
-      './Sounds/BFGDD.mp4',
-      './Sounds/Your best Nightmare.mp4'
+      './BackGround Music/No cure.mp3',
+      './BackGround Music/Milky Ways.mp3',
+      './BackGround Music/BFGDD.mp3',
+      './BackGround Music/Your best Nightmare.mp3'
     ]
     this.lastSong = '';
     this.availableSongs = [];
